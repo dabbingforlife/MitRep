@@ -7,8 +7,8 @@ ip = input("Enter IP: ")
 port = int(input("Enter port: "))
 
 text = ""
-line = 0
 word = ""
+history = []
 
 def setup(stdscr):
     os.write(1, b"\x1b[2J")     #stdscr.clear()
@@ -19,28 +19,38 @@ def setup(stdscr):
 
 
 def newmessage(stdscr,message):
+    stdscr.clear()
     stdscr.nodelay(True)
-    global line
+
     if message != "":
+        history.append(message)
         height, width = stdscr.getmaxyx()
-        stdscr.addstr(line,0,message)
-        line += 1
+        while len(history) > height - 2:
+            history.remove(history[0])
+        for text in range(len(history)):
+            stdscr.addstr(text,0,history[text])
+
         stdscr.move(height-1,14)
-        stdscr.refresh()
 
 
 def getinput(stdscr):
-    global word
+    global word,history
     key = stdscr.getch()
 
     if key in (127,8,KEY_BACKSPACE):
         word = word[:-1]
 
     elif key in (10,13):
-        s.sendall(word.encode())
+        if word == "!clear":
+            stdscr.clear()            
+        else:
+            s.sendall(word.encode())
         word = ""
     
     elif 32 <= key <= 126:
+        if word.split() == "!clear":
+            history = []
+            stdscr.clear()
         word += chr(key)
 
     height, width = stdscr.getmaxyx()
@@ -56,6 +66,7 @@ def recieve_message():
 
 def main(stdscr):
     setup(stdscr)
+    stdscr.scrollok(True)
 
     while True:
         while not messages.empty():
@@ -72,5 +83,3 @@ input_thread = threading.Thread(target=recieve_message, daemon = True)
 input_thread.start()
 
 wrapper(main)
-#while True:
-    #wrapper(getinput)
