@@ -111,7 +111,9 @@ def handle_client(cli):
                 server_dict["msg"] =  cli.username + " waves" 
                 broadcast(dumps({"type":"announcement","msg":""}))
 
-        
+            else:
+                continue
+            
         elif msg_dict["type"] == "text":
             server_dict["type"] = "text"
             server_dict["username"] = cli.username

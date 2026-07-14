@@ -1,4 +1,4 @@
-from curses import wrapper,echo,noecho,KEY_BACKSPACE,A_BOLD
+from curses import wrapper,echo,noecho,KEY_BACKSPACE,A_BOLD,A_UNDERLINE
 from queue import Queue
 import threading,socket,os
 from json import dumps,loads
@@ -17,8 +17,6 @@ def setup(stdscr):
     stdscr.keypad(True)
     stdscr.timeout(20)
     stdscr.refresh()
-
-
 
 
 def newmessage(stdscr,message):
@@ -86,6 +84,7 @@ def recieve_message():
     while True:
         text = s.recv(1024).decode()
         messages.put(text)
+
 
 def main(stdscr):
     setup(stdscr)
