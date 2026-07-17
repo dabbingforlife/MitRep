@@ -74,7 +74,12 @@ def broadcast(message) -> None:    # Sends a message to all users
 
     msg_dict = loads(message)   # Loads json into a dictionary to print message in server log
 
-    print(msg_dict.get("username") + ":" + msg_dict.get("msg"))    # Prints the message
+    if msg_dict.get("type") == "announcement":
+        print(msg_dict.get("msg"))    # Prints the message
+
+    else:
+        print(msg_dict.get("username") + ": " + msg_dict.get("msg"))    # Prints the message
+
     for user in users:
             try:
                 user.conn.send(message.encode())
