@@ -58,27 +58,23 @@ greetings = (
 )
 
 
-class client:    
+class client:   # Class containing all client information
     def __init__(self,c,addr):
         self.conn = c
         self.addr = addr
         self.username = "User_" + str(userid)
         
-def addtext(stdscr,y,x):
-    stdscr.addstr(y,x,"Server successfully hosted")
-    stdscr.refresh()
-
-def greet(connection):
+def greet(connection) -> str:   # Returns a string that greets a specific user
     server_dict: dict = {}
     server_dict["type"] = "announcement"
     server_dict["msg"] = connection.username + " joined in! " + random.choice(greetings)
     return server_dict
 
-def broadcast(message):
+def broadcast(message) -> None:    # Sends a message to all users
 
-    msg_dict = loads(message)
+    msg_dict = loads(message)   # Loads json into a dictionary to print message in server log
 
-    print(msg_dict.get("msg"))
+    print(msg_dict.get("username") + ":" + msg_dict.get("msg"))    # Prints the message
     for user in users:
             try:
                 user.conn.send(message.encode())
@@ -86,19 +82,19 @@ def broadcast(message):
                 user.conn.close()
 
 
-def handle_client(cli):
+def handle_client(cli) -> None:
     while True:
         try:
-            msg_dict = loads(cli.conn.recv(1024).decode())
+            msg_dict = loads(cli.conn.recv(1024).decode())   # Recieves message from client and converts it into a dictionary
 
-            server_dict:dict = {}
+            server_dict:dict = {}   # Dictionary used to send messages to client
 
         except:
             continue
         
         if msg_dict["type"] == "command":
 
-            if msg_dict["msg"].startswith("!changeusername"):    #Changes username of client
+            if msg_dict["msg"].startswith("!changeusername"):    # Changes username of client
 
                 old = cli.username
                 cli.username = msg_dict["msg"].lstrip("!changeusername").strip()
@@ -106,22 +102,22 @@ def handle_client(cli):
                 server_dict["type"] = "announcement"
                 server_dict["msg"] = old + " changed their username to " + cli.username
 
-            elif msg_dict["msg"] == "!wave":
+            elif msg_dict["msg"] == "!wave":    # Client waves
 
                 server_dict["type"] = "announcement"
-                broadcast(dumps({"type":"announcement","msg":""}))
+                broadcast(dumps({"type":"announcement","msg":""}))  # Sends an empty message, resulting in a blank line above and below the wave in client terminal
                 server_dict["msg"] =  cli.username + " waves" 
                 broadcast(dumps({"type":"announcement","msg":""}))
 
             else:
                 continue
             
-        elif msg_dict["type"] == "text":
+        elif msg_dict["type"] == "text":    # Prepares server_dict with data required to send to clients
             server_dict["type"] = "text"
             server_dict["username"] = cli.username
             server_dict["msg"] = msg_dict["msg"]
 
-        broadcast(dumps(server_dict))
+        broadcast(dumps(server_dict))   # Sends server_dict to all clients
 
 
 
@@ -131,19 +127,19 @@ s = socket.socket()
 
 
 try:
-    s.bind(("",port))
+    s.bind(("",port))   # Binds server to a specified port
 
 except:
     print("Connection unsuccesful")
 
-s.listen(5)
+s.listen()    # Allows server to allow connections
 
 while True:
-    conn,addr = s.accept()
+    conn,addr = s.accept()  # Accepts connection 
     userid += 1
-    c = client(conn,addr)
+    c = client(conn,addr)   # Creates an object that acts as the client
     users.append(c)
-    broadcast(dumps(greet(c)))
+    broadcast(dumps(greet(c)))  # Greets newly joined user
  
-    client_t = threading.Thread(target=handle_client, args=(c, )) 
+    client_t = threading.Thread(target=handle_client, args=(c, ))   # Creates a thread to receive messages from clients
     client_t.start()

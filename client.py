@@ -13,7 +13,7 @@ word = ""
 history = []
 refreshed = False
 
-def setup(stdscr):
+def setup(stdscr) -> None:
     os.write(1, b"\x1b[2J")
     noecho()
     curs_set(0)
@@ -22,7 +22,7 @@ def setup(stdscr):
     stdscr.refresh()
 
 
-def newmessage(stdscr,message):
+def newmessage(stdscr,message) -> None:
     stdscr.clear()
     global history
     stdscr.nodelay(True)    
@@ -31,11 +31,11 @@ def newmessage(stdscr,message):
         history.append(message)     # Adds json message to a list containing all messages that can fit in the window
         height, width = stdscr.getmaxyx()
 
-        visible = height - 2
+        visible = height - 2    # Stores number of rows where text is printable
         start = max(0, len(history) - visible - idx)
         end = start + visible
 
-        if len(history) > visible:
+        if len(history) > visible: 
             bounded = history[start:end] 
 
         else:
@@ -57,7 +57,8 @@ def newmessage(stdscr,message):
         stdscr.move(height-1,14)
 
 
-def draw_messages(stdscr):
+def draw_messages(stdscr) -> None:
+
     global refreshed
     refreshed = True
     stdscr.clear()
@@ -90,7 +91,7 @@ def draw_messages(stdscr):
     stdscr.addstr(height-1,0,"Type message: ",A_BOLD) 
     stdscr.addstr(word)
 
-def getinput(stdscr):
+def getinput(stdscr) -> None:
     global word,history,idx
     key = stdscr.getch()
     height, width = stdscr.getmaxyx()
@@ -120,48 +121,50 @@ def getinput(stdscr):
     elif 32 <= key <= 126:  #Checks if key is in printable range
         word += chr(key)
 
-    if key in (259,KEY_UP):
+    if key in (259,KEY_UP):    # Checks if key is up arrow 
         idx += 1
         if idx >= len(history):
             idx = len(history)
 
-    if key in (258,KEY_DOWN):
+    if key in (258,KEY_DOWN):   # Checks if key is down arrow
         idx -= 1
         if idx < 0:
             idx = 0
 
-    max_scroll = max(0, len(history) - (height - 2))
+    max_scroll = max(0, len(history) - (height - 2))    # Applies maximum value for idx
     idx = min(idx, max_scroll)
 
-    if key == KEY_RESIZE:
+    if key == KEY_RESIZE:   # Checks if window was resized
         draw_messages(stdscr)
 
     
 
-def recieve_message():
+def recieve_message() -> None:
     while True:
         text = s.recv(1024).decode()
-        messages.put(text)
+        messages.put(text)   # Adds message to queue 'messages'
 
 
-def main(stdscr):
-    setup(stdscr)
-
+def main(stdscr) -> None:
+    setup(stdscr)   # Sets up the terminal
+    
     while True:
         refreshed = False
-        while not messages.empty():
+
+        while not messages.empty():    # Adds messages to history list
             newmessage(stdscr,messages.get())
         getinput(stdscr)
+
         if not refreshed:
             draw_messages(stdscr)
         stdscr.refresh()
 
 
 s = socket.socket()
-s.connect((ip,port))
+s.connect((ip,port))    # Connects to the server
 
 
-input_thread = threading.Thread(target=recieve_message, daemon = True)
+input_thread = threading.Thread(target=recieve_message, daemon = True)   # Creates a new thread so that recieving of messages and typing takes place simultaneously
 input_thread.start()
 
 wrapper(main)
